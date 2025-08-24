@@ -1,30 +1,34 @@
 use ahash;
 use hecs::{CommandBuffer, Entity, World};
+use macroquad::color;
+use macroquad::math::Vec2;
 
 pub struct Label(String);
-pub struct Transform; // empty for now, don't care about images
+pub struct Transform(pub(crate) Vec2); // empty for now, don't care about images
+
+pub struct Color(pub(crate) color::Color);
 
 pub struct Ports {
-    count: usize,
+    pub(crate) count: usize,
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PortRef {
-    device: Entity,
-    index: usize,
+    pub device: Entity,
+    pub index: usize,
 }
 pub struct HubLogic;
 
 pub struct Emitter {
-    payload: Vec<u8>,
-    port: usize,
-    interval_t: usize,
-    timer_t: usize,
+    pub payload: Vec<u8>,
+    pub port: usize,
+    pub interval_t: usize,
+    pub timer_t: usize,
 }
 pub struct ConsoleSink;
 
 pub struct ConnectsPorts {
-    a: PortRef,
-    b: PortRef,
+    pub a: PortRef,
+    pub b: PortRef,
 }
 pub struct LatencyT(usize);
 
@@ -36,14 +40,14 @@ enum PortState {
 }
 
 pub struct AtPort {
-    port: PortRef,
-    state: PortState,
+    pub port: PortRef,
+    pub state: PortState,
 }
 pub struct Transit {
-    from: PortRef,
-    to: PortRef,
-    delay: usize,
-    delay_full: usize,
+    pub from: PortRef,
+    pub to: PortRef,
+    pub delay: usize,
+    pub delay_full: usize,
 }
 
 pub fn spawn_spammer(
@@ -52,13 +56,16 @@ pub fn spawn_spammer(
     num_ports: usize,
     payload: Vec<u8>,
     interval_t: usize,
+    x: f32,
+    y: f32,
 ) -> Entity {
     if num_ports == 0 {
         panic!("num_ports must be > 0");
     }
     world.spawn((
         Label(label),
-        Transform,
+        Transform(Vec2::new(x, y)),
+        Color(color::GRAY),
         Ports { count: num_ports },
         Emitter {
             payload,
@@ -69,13 +76,14 @@ pub fn spawn_spammer(
     ))
 }
 
-pub fn spawn_sink(world: &mut World, label: String, n_ports: usize) -> Entity {
+pub fn spawn_sink(world: &mut World, label: String, n_ports: usize, x: f32, y: f32) -> Entity {
     if n_ports == 0 {
         panic!("n_ports must be > 0");
     }
     world.spawn((
         Label(label),
-        Transform,
+        Transform(Vec2::new(x, y)),
+        Color(color::GRAY),
         Ports { count: n_ports },
         ConsoleSink,
     ))
@@ -91,6 +99,7 @@ pub fn spawn_link(
 ) -> Entity {
     world.spawn((
         Transform,
+        Color(color::GREEN),
         ConnectsPorts {
             a: PortRef {
                 device: a_device,
@@ -105,11 +114,17 @@ pub fn spawn_link(
     ))
 }
 
-pub fn spawn_hub(world: &mut World, label: String, n_ports: usize) -> Entity {
+pub fn spawn_hub(world: &mut World, label: String, n_ports: usize, x: f32, y: f32) -> Entity {
     if n_ports == 0 {
         panic!("n_ports must be > 0");
     }
-    world.spawn((Label(label), Transform, Ports { count: n_ports }, HubLogic))
+    world.spawn((
+        Label(label),
+        Transform(Vec2::new(x, y)),
+        Color(color::GRAY),
+        Ports { count: n_ports },
+        HubLogic,
+    ))
 }
 
 pub fn spawn_packet(cb: &mut CommandBuffer, payload: Vec<u8>, machine: Entity, port: usize) {
