@@ -1,0 +1,11 @@
+[package]
+name = "NetStuff"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macroquad = "0.4"
+egui-macroquad = "0.17"
+egui = "0.31.1"
+hecs = "0.10"
+ahash = "0.8.12"
