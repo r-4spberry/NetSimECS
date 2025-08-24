@@ -137,7 +137,7 @@ fn emitter_system(world: &mut World, cb: &mut CommandBuffer) {
     }
 }
 fn link_depart_system(world: &mut World, cb: &mut CommandBuffer) {
-    for (link, (conn, lat)) in world.query::<(&ConnectsPorts, &LatencyT)>().iter() {
+    for (_link, (conn, lat)) in world.query::<(&ConnectsPorts, &LatencyT)>().iter() {
         for (pkt, at) in world.query::<&AtPort>().iter() {
             if at.state == PortState::JustArrived {
                 continue;
@@ -169,7 +169,7 @@ fn link_depart_system(world: &mut World, cb: &mut CommandBuffer) {
 }
 
 fn link_move_system(world: &mut World, cb: &mut CommandBuffer) {
-    for (trans_packet, (transit)) in world.query::<(&mut Transit)>().iter() {
+    for (trans_packet, (transit)) in world.query::<&mut Transit>().iter() {
         if transit.delay > 0 {
             println!("Moving a packet");
             transit.delay -= 1;
@@ -188,7 +188,7 @@ fn link_move_system(world: &mut World, cb: &mut CommandBuffer) {
 }
 
 fn hub_propagate_system(world: &mut World, cb: &mut CommandBuffer) {
-    for (hub, (hub_logic, ports)) in world.query::<(&HubLogic, &Ports)>().iter() {
+    for (hub, (_hub_logic, ports)) in world.query::<(&HubLogic, &Ports)>().iter() {
         for (packet, (at, payload)) in world.query::<(&AtPort, &Payload)>().iter() {
             if at.state == PortState::ReadyToSend || at.port.device != hub {
                 continue;
