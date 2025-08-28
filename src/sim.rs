@@ -3,13 +3,12 @@ use hecs::{CommandBuffer, Entity, World};
 use macroquad::color;
 use macroquad::math::Vec2;
 
-pub struct Label(String);
-pub struct Transform(pub(crate) Vec2); // empty for now, don't care about images
-
-pub struct Color(pub(crate) color::Color);
+pub struct Label(pub String);
+pub struct Transform(pub Vec2);
+pub struct Color(pub color::Color);
 
 pub struct Ports {
-    pub(crate) count: usize,
+    pub count: usize,
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PortRef {
@@ -34,7 +33,7 @@ pub struct LatencyT(usize);
 
 pub struct Payload(Vec<u8>);
 #[derive(PartialEq, Eq)]
-enum PortState {
+pub enum PortState {
     JustArrived,
     ReadyToSend,
 }
@@ -142,7 +141,7 @@ pub fn spawn_packet(cb: &mut CommandBuffer, payload: Vec<u8>, machine: Entity, p
 }
 
 fn emitter_system(world: &mut World, cb: &mut CommandBuffer) {
-    for (entity, (emitter, ports)) in world.query::<(&mut Emitter, &Ports)>().iter() {
+    for (entity, (emitter, _ports)) in world.query::<(&mut Emitter, &Ports)>().iter() {
         emitter.timer_t += 1;
         if emitter.timer_t >= emitter.interval_t {
             emitter.timer_t = 0;
@@ -184,7 +183,7 @@ fn link_depart_system(world: &mut World, cb: &mut CommandBuffer) {
 }
 
 fn link_move_system(world: &mut World, cb: &mut CommandBuffer) {
-    for (trans_packet, (transit)) in world.query::<&mut Transit>().iter() {
+    for (trans_packet, transit) in world.query::<&mut Transit>().iter() {
         if transit.delay > 0 {
             println!("Moving a packet");
             transit.delay -= 1;
@@ -203,8 +202,11 @@ fn link_move_system(world: &mut World, cb: &mut CommandBuffer) {
 }
 
 fn hub_propagate_system(world: &mut World, cb: &mut CommandBuffer) {
-    for (hub, (_hub_logic, ports)) in world.query::<(&HubLogic, &Ports)>().iter() {
-        for (packet, (at, payload)) in world.query::<(&AtPort, &Payload)>().iter() {
+    for (packet, (at, payload)) in world.query::<(&AtPort, &Payload)>().iter() {
+        let device = at.port.device;
+        if world.get::<&HubLogic>(at.port.device).is_ok() {
+            let hub = device;
+            let ports = world.get::<&Ports>(at.port.device).unwrap();
             if at.state == PortState::ReadyToSend || at.port.device != hub {
                 continue;
             }
